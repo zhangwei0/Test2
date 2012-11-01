@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingLeft="5.0dip"
+    android:paddingRight="5.0dip" >
+
+    <FrameLayout
+        android:id="@+id/content_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bookshelf_item_bg" >
+
+        <ImageView
+            android:id="@+id/grid_mag"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:scaleType="fitXY"
+            android:src="@drawable/cover_temp" />
+
+        <LinearLayout
+            android:id="@+id/grid_perImageView1"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="vertical" >
+
+            <RelativeLayout
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent" >
+
+                <ImageView
+                    android:id="@+id/grid_mag1111"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/loading_bg_1" />
+
+                <ProgressBar
+                    android:id="@+id/grid_progressBar001"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="fill_parent"
+                    android:layout_height="7.0dip"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="5.0dip"
+                    android:layout_marginRight="5.0dip"
+                    android:max="100"
+                    android:progressDrawable="@drawable/progressbar" />
+
+                <TextView
+                    android:id="@+id/grid_percentText1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:paddingLeft="8.0dip"
+                    android:text="0%"
+                    android:textColor="#ffffffff"
+                    android:textSize="18.0dip" />
+            </RelativeLayout>
+        </LinearLayout>
+    </FrameLayout>
+
+    <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:scaleType="fitXY"
+        android:src="@drawable/bottom_bg" />
+
+</LinearLayout>
