@@ -11,17 +11,19 @@
         android:id="@+id/content_layout"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:clickable="true"
+        android:longClickable="true"
         android:background="@drawable/bookshelf_item_bg" >
 
         <ImageView
-            android:id="@+id/grid_mag"
+            android:id="@+id/image"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:scaleType="fitXY"
             android:src="@drawable/cover_temp" />
 
         <LinearLayout
-            android:id="@+id/grid_perImageView1"
+            android:id="@+id/progress_view"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:orientation="vertical" >
@@ -31,14 +33,14 @@
                 android:layout_height="fill_parent" >
 
                 <ImageView
-                    android:id="@+id/grid_mag1111"
+                    android:id="@+id/load_image"
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
                     android:scaleType="fitXY"
                     android:src="@drawable/loading_bg_1" />
 
                 <ProgressBar
-                    android:id="@+id/grid_progressBar001"
+                    android:id="@+id/progress_bar"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="fill_parent"
                     android:layout_height="7.0dip"
@@ -50,7 +52,7 @@
                     android:progressDrawable="@drawable/progressbar" />
 
                 <TextView
-                    android:id="@+id/grid_percentText1"
+                    android:id="@+id/progress_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerHorizontal="true"

@@ -10,7 +10,7 @@ import android.view.Menu;
 
 public class MainActivity extends Activity {
 
-    private static final int SLEEP_SECONDS = 1500;
+    private static final int SLEEP_SECONDS = 0;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
