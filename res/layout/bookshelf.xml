@@ -9,11 +9,11 @@
         android:layout_height="wrap_content"
         android:background="@drawable/zuixinyuedu" />
     
-    <LinearLayout 
+    <GridView 
         android:id="@+id/recently_reads"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content">
-    </LinearLayout>
+    </GridView>
     
     <ImageView
         android:layout_width="wrap_content"

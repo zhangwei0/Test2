@@ -3,6 +3,7 @@ package com.wl.magz.activity;
 import java.util.ArrayList;
 
 import com.wl.magz.R;
+import com.wl.magz.view.AllMgzsAdapter;
 import com.wl.magz.view.BookshelfItem;
 
 import android.app.Activity;
@@ -25,8 +26,8 @@ public class BookshelfActivity extends Activity {
     private ArrayList<BookshelfItem> mRecentlyReads;
     private ArrayList<BookshelfItem> mAllMgzs;
     
-    private LinearLayout mLinearLayout;
-    private GridView mGridView;
+    private GridView mRecentGridView;
+    private GridView mAllGridView;
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         setContentView(R.layout.bookshelf);
@@ -40,12 +41,12 @@ public class BookshelfActivity extends Activity {
         getItemShape();
         initViews();
     }
-    
+
     private void getItemShape() {
         DisplayMetrics display = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(display);
         mItemWidth = display.widthPixels / 3;
-        mItemHeight = display.heightPixels / 4;
+        mItemHeight = (int) (display.heightPixels / 5);
     }
     
     private void initViews() {
@@ -54,23 +55,20 @@ public class BookshelfActivity extends Activity {
     }
     
     private void initRecentReadsView() {
-        mLinearLayout = (LinearLayout) findViewById(R.id.recently_reads);
+        mRecentGridView = (GridView) findViewById(R.id.recently_reads);
         if (mRecentlyReads == null) return;
-        int count = mRecentlyReads.size();
-        for (int i = 0; i < count; i ++) {
-            BookshelfItem item = mRecentlyReads.get(i);
-            mLinearLayout.addView(item.getView(), mItemWidth,mItemHeight);
-        }
+        AllMgzsAdapter adapter = new AllMgzsAdapter(this, mRecentlyReads);
+        mRecentGridView.setAdapter(adapter);
+        mRecentGridView.setNumColumns(3);
     }
     
     private void initAllMgzsView() {
-        mGridView = (GridView) findViewById(R.id.all_mgzs);
+        mAllGridView = (GridView) findViewById(R.id.all_mgzs);
         if (mRecentlyReads == null) return;
-        int count = mRecentlyReads.size();
-        for (int i = 0; i < count; i ++) {
-            BookshelfItem item = mRecentlyReads.get(i);
-            mGridView.addView(item.getView(), mItemWidth,mItemHeight);
-        }
+
+        AllMgzsAdapter adapter = new AllMgzsAdapter(this, mAllMgzs);
+        mAllGridView.setAdapter(adapter);
+        mAllGridView.setNumColumns(3);
     }
     
     private ArrayList<BookshelfItem> getRecentlyReads() {
@@ -80,15 +78,15 @@ public class BookshelfActivity extends Activity {
             int count = paths.getCount();
             for (int i = 0; i < count; i ++) {
                 String path = paths.getString(COLUMN_INDEX_RECENTLY_READS_PATH);
-                BookshelfItem item = new BookshelfItem(this, path);
+                BookshelfItem item = new BookshelfItem(this, path, BookshelfItem.TYPE_RECENTLY_READS, mItemWidth, mItemHeight);
                 list.add(item);
             }
         }
         
         //TEST
-        for (int i = 0; i < 9; i ++) {
-            String path = Environment.getExternalStorageDirectory().toString() + "/test.jpg";
-            BookshelfItem item = new BookshelfItem(this, path);
+        for (int i = 0; i < 3; i ++) {
+            String path = Environment.getExternalStorageDirectory().toString() + "/test2.jpg";
+            BookshelfItem item = new BookshelfItem(this, path, BookshelfItem.TYPE_RECENTLY_READS, mItemWidth, mItemHeight);
             list.add(item);
         }
         
@@ -102,11 +100,18 @@ public class BookshelfActivity extends Activity {
             int count = paths.getCount();
             for (int i = 0; i < count; i ++) {
                 String path = paths.getString(COLUMN_INDEX_ALL_MGZS_PATH);
-                BookshelfItem item = new BookshelfItem(this, path);
+                BookshelfItem item = new BookshelfItem(this, path, BookshelfItem.TYPE_ALL_MGZS, mItemWidth, mItemHeight);
                 list.add(item);
             }
         }
-        return null;
+        
+      //TEST
+        for (int i = 0; i < 100; i ++) {
+            String path = Environment.getExternalStorageDirectory().toString() + "/test.jpg";
+            BookshelfItem item = new BookshelfItem(this, path, BookshelfItem.TYPE_RECENTLY_READS, mItemWidth, mItemHeight);
+            list.add(item);
+        }
+        return list;
     }
     
     private Cursor getRecentlyReadsPath() {
