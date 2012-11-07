@@ -1,10 +1,5 @@
 package com.wl.magz.view;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import com.wl.magz.R;
 
 import android.content.Context;
@@ -37,21 +32,28 @@ public class BookshelfItem{
     private ProgressBar mProgress;
     private TextView mProgressText;
     
-    private int mImageWidth;
-    private int mImageHeight;
+    public static int mImageWidth;
+    public static int mImageHeight;
     
     private int mId;
     private int mType;
     private boolean mInProgress = false;
-    private BookshelfItem(Context context, int imageWidth, int imageHeight) {
+    
+    public interface Callback {
+        public void loadAndSetImage(String path, BookshelfItem item);
+    }
+    
+    private static Callback mCallback;
+    public static void setCallback(Callback callback) {
+        mCallback = callback;
+    }
+    private BookshelfItem(Context context) {
         mContext = context;
-        mImageWidth = imageWidth;
-        mImageHeight = imageHeight;
         init(context);
     }
     
-    private BookshelfItem(Context context, int type, int imageWidth, int imageHeight) {
-        this(context,imageWidth, imageHeight);
+    private BookshelfItem(Context context, int type) {
+        this(context);
         if ((type != TYPE_RECENTLY_READS) && (type != TYPE_ALL_MGZS)) {
             throw new IllegalStateException();
         }
@@ -59,15 +61,15 @@ public class BookshelfItem{
         checkState();
     }
     
-    public BookshelfItem(Context context, String path, int type, int imageWidth, int imageHeight) {
-        this(context, type, imageWidth, imageHeight);
+    public BookshelfItem(Context context, String path, int type) {
+        this(context, type);
         if (path != null) {
-            setImagePath2(path);
+            setImagePath3(path);
         }
     }
 
-    public BookshelfItem(Context context, String path, boolean inProgress, int imageWidth, int imageHeight) {
-        this(context, path, TYPE_RECENTLY_READS, imageWidth, imageHeight);
+    public BookshelfItem(Context context, String path, boolean inProgress) {
+        this(context, path, TYPE_RECENTLY_READS);
     }
     
     private void init(Context context) {
@@ -99,12 +101,15 @@ public class BookshelfItem{
         setImageBitmap(bitmap);
     }
     
+    //TODO
+    //This will be run in background
     private void setImagePath2(String path){
         BitmapFactory.Options option = new BitmapFactory.Options();
-        option.inSampleSize = 2; //将图片设为原来宽高的1/2，防止内存溢出
-        Bitmap bm = BitmapFactory.decodeFile(path,option);//文件流
+        option.inSampleSize = 2;
+        Bitmap bm = BitmapFactory.decodeFile(path,option);
         if (bm == null) return;
-        setImageBitmap(zoom(bm));
+        Bitmap newBm = zoom(bm);
+        setImageBitmap(newBm);
     }
     
     private Bitmap zoom(Bitmap bm) {
@@ -118,6 +123,12 @@ public class BookshelfItem{
         matrix.postScale(scaleWidth, scaleHeight);
         Bitmap newBm = Bitmap.createBitmap(bm, 0, 0, width, height, matrix, true);
         return newBm;
+    }
+    
+    private void setImagePath3(String path) {
+        if (mCallback != null) {
+             mCallback.loadAndSetImage(path, this);
+        }
     }
     
     public void setImageBitmap(Bitmap bitmap) {
