@@ -20,10 +20,15 @@
         android:layout_height="wrap_content"
         android:background="@drawable/quanbuzazhi" />
     
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" >
     <GridView
         android:id="@+id/all_mgzs"
+        android:numColumns="3"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="fill_parent" >
     </GridView>
+    </FrameLayout>
 
 </LinearLayout>

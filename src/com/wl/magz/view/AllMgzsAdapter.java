@@ -2,10 +2,13 @@ package com.wl.magz.view;
 
 import java.util.ArrayList;
 
+import com.wl.magz.data.BookshelfItem;
+
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.util.Log;
 
 public class AllMgzsAdapter extends BaseAdapter{
     private Context mContext;
@@ -24,18 +27,23 @@ public class AllMgzsAdapter extends BaseAdapter{
     }
 
     public long getItemId(int position) {
-        return ((BookshelfItem)getItem(position)).getId();
+        return ((BookshelfItem)getItem(position)).mId;
     }
 
     public View getView(int position, View convertView, ViewGroup parent) {
-        //TODO
+
+        Log.e("Adaptrer", "pos:" + position);
+        BookshelfItem item = (BookshelfItem)mData.get(position);
+        BookshelfItemView itemView;
         if (convertView  == null) {
-            convertView = ((BookshelfItem)getItem(position)).getView();
+            Log.e("Adapter", "new");
+            itemView = BookshelfItemView.newView(mContext, item);
         } else {
-            
+            Log.e("Adapter", "old");
+            itemView = BookshelfItemView.fromView(mContext, convertView, item);
         }
-        
-        return convertView;
+
+        return itemView.getView();
     }
 
 }
