@@ -1,4 +1,4 @@
-package com.wl.magz.data;
+package com.wl.magz.view;
 
 import android.graphics.Bitmap;
 
@@ -13,7 +13,7 @@ public class BookshelfItem{
     public int mType;
     public int mProgress;
     public boolean mInProgress;
-    public String mPath;
+    public Object mData;
     
     public Bitmap mBitmap;
     public boolean mLoading;
@@ -21,12 +21,12 @@ public class BookshelfItem{
     
     public BookshelfItemView mView;
 
-    public BookshelfItem(int type, String path, long id) {
+    public BookshelfItem(int type, Object data, long id) {
         if ((type != TYPE_RECENTLY_READS) && (type != TYPE_ALL_MGZS)) {
             throw new IllegalStateException();
         }
         mType = type;
-        mPath = path;
+        mData = data;
         mId = id;
     }
 
