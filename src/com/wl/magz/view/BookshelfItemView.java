@@ -75,7 +75,6 @@ public class BookshelfItemView{
     }
     
     private void initData(BookshelfItem item) {
-        item.mView = this;
         this.mItem = item;
         this.mType = item.mType;
         this.mId = item.mId;

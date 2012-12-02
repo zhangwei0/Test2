@@ -3,12 +3,15 @@ package com.wl.magz.activity;
 import java.util.ArrayList;
 
 import com.wl.magz.R;
+import com.wl.magz.utils.DBHelper;
 import com.wl.magz.utils.ImageCache;
 import com.wl.magz.utils.ImageCache.ImageCacheParams;
 import com.wl.magz.utils.ImageResizer;
 import com.wl.magz.utils.ImageWorker;
 import com.wl.magz.utils.Utils;
 import com.wl.magz.view.BookshelfItem;
+import com.wl.magz.view.BookshelfItem.DownloadItem;
+import com.wl.magz.view.BookshelfItem.RecentItem;
 import com.wl.magz.view.BookshelfItemAdapter;
 
 import android.app.Activity;
@@ -28,27 +31,15 @@ public class BookshelfFragment extends Fragment {
     private BookshelfItemAdapter mRecentsAdapter;
     
     private ImageWorker mImageWorker;
+    
+    ArrayList<BookshelfItem> mMyItems = new ArrayList<BookshelfItem>();
+    ArrayList<BookshelfItem> mRecentItems = new ArrayList<BookshelfItem>();
 
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         
-//        Cursor allCursor = Utils.getAllMgzsPath();
-//        Cursor recentsCursor = Utils.getRecentlyReadsPath();
-        
-        ArrayList<BookshelfItem> all = new ArrayList<BookshelfItem>();
-        for (int i = 1; i < 16; i ++) {
-            String path = "/sdcard/test" + i + ".jpg";
-            BookshelfItem item = new BookshelfItem(path, 0);
-            all.add(item);
-        }
-        
-        ArrayList<BookshelfItem> recents = new ArrayList<BookshelfItem>();
-        for (int i = 1; i < 4; i ++) {
-            String path = "/sdcard/test" + i + ".jpg";
-            BookshelfItem item = new BookshelfItem(path, 0);
-            recents.add(item);
-        }
-        
+        initData();
+
         int[] size = getItemShape();
         mImageWorker = new ImageResizer(getActivity(), size[0], size[1]);
         ImageCacheParams cacheParams = new ImageCacheParams(IMAGE_CACHE_DIR);
@@ -56,8 +47,8 @@ public class BookshelfFragment extends Fragment {
         mImageWorker.setLoadingBitmapResource(R.drawable.cover_temp);
         mImageWorker.setImageCache(ImageCache.findOrCreateCache(getActivity(), cacheParams));
         
-        mAllAdapter = new BookshelfItemAdapter(getActivity(), mImageWorker, null, all);
-        mRecentsAdapter = new BookshelfItemAdapter(getActivity(), mImageWorker, null, recents);
+        mAllAdapter = new BookshelfItemAdapter(getActivity(), mImageWorker, null, mMyItems);
+        mRecentsAdapter = new BookshelfItemAdapter(getActivity(), mImageWorker, null, mRecentItems);
     }
     
     private int[] getItemShape() {
@@ -66,6 +57,31 @@ public class BookshelfFragment extends Fragment {
         int imageWidth = display.widthPixels / 3;
         int imageHeight = (int) (display.heightPixels / 5);
         return new int[] {imageWidth, imageHeight};
+    }
+    
+    private void initData() {
+        Cursor allCursor = DBHelper.getMyMags();
+        Cursor recentsCursor = DBHelper.getRecentReads();
+
+        mMyItems = new ArrayList<BookshelfItem>();
+        mRecentItems = new ArrayList<BookshelfItem>();
+        if (allCursor != null) {
+            allCursor.moveToPosition(-1);
+            while (allCursor.moveToNext()) {
+                DownloadItem magz = new DownloadItem();
+                magz.initFromCursor(allCursor);
+                mMyItems.add(magz);
+            }
+        }
+        
+        if (recentsCursor != null) {
+            recentsCursor.moveToPosition(-1);
+            while (recentsCursor.moveToNext()) {
+                RecentItem magz = new RecentItem();
+                magz.initFromCursor(recentsCursor);
+                mRecentItems.add(magz);
+            }
+        }
     }
     
     @Override

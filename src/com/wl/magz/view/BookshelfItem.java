@@ -1,37 +1,76 @@
 package com.wl.magz.view;
 
-import android.graphics.Bitmap;
+import android.content.ContentValues;
+import android.database.Cursor;
 
-import com.wl.magz.view.BookshelfItemView;
-
-public class BookshelfItem{
+public abstract class BookshelfItem {
+    protected static final int TYPE_ALL = 0;
+    protected static final int TYPE_RECENT = 1;
     
-    public static final int TYPE_RECENTLY_READS = 0;
-    public static final int TYPE_ALL_MGZS = 1;
-
-    public long mId;
+    protected int mPrivateKey;
     public int mType;
+    public long mId;
+    
     public int mProgress;
     public boolean mInProgress;
+
     public Object mData;
     
-    public Bitmap mBitmap;
-    public boolean mLoading;
-//    public boolean mComplete;
+    public BookshelfItem() {}
     
-    public BookshelfItemView mView;
-
-    public BookshelfItem(int type, Object data, long id) {
-        if ((type != TYPE_RECENTLY_READS) && (type != TYPE_ALL_MGZS)) {
-            throw new IllegalStateException();
-        }
-        mType = type;
-        mData = data;
-        mId = id;
+    public BookshelfItem(int key) {
+        mPrivateKey = key;
     }
 
+    protected int getType() {
+        return mType;
+    }
+    
+    public abstract ContentValues toValues();
+    public abstract void initFromCursor(Cursor c);
+    
+    public static class DownloadItem extends BookshelfItem {
+        public DownloadItem() {}
+        public DownloadItem(int key) {
+            super(key);
+            mType = TYPE_ALL;
+        }
 
-    public BookshelfItem(String path, long id) {
-        this(TYPE_RECENTLY_READS, path, id);
+        public boolean mDownloadComplete = true;
+        public int mProgress;
+        @Override
+        public ContentValues toValues() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public void initFromCursor(Cursor c) {
+            // TODO Auto-generated method stub
+            
+        }
+
+    }
+    
+    public static class RecentItem extends BookshelfItem {
+        public RecentItem() {}
+        public RecentItem(int key) {
+            super(key);
+            mType = TYPE_RECENT;
+        }
+        
+        public long mReadTime;
+
+        @Override
+        public ContentValues toValues() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public void initFromCursor(Cursor c) {
+            // TODO Auto-generated method stub
+            
+        }
     }
 }
