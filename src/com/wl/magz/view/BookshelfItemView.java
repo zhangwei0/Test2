@@ -1,18 +1,22 @@
 package com.wl.magz.view;
 
 import com.wl.magz.R;
+import com.wl.magz.utils.DBHelper;
 import com.wl.magz.utils.ImageWorker;
 
+import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class BookshelfItemView{
     
@@ -29,16 +33,14 @@ public class BookshelfItemView{
     private ProgressBar mProgressBar;
     private TextView mProgressText;
     
-    public static int mImageWidth;
-    public static int mImageHeight;
-    
     public long mId;
-    private int mType;
-    private boolean mInProgress = false;
+    private boolean mDownloadComplete = true;
     private int mProgress;
     
     public BookshelfItem mItem;
     private Object mData;
+    @SuppressWarnings("unused")
+    private long mReadTime;
     
     public static ImageWorker mImageWorker;
 
@@ -76,11 +78,11 @@ public class BookshelfItemView{
     
     private void initData(BookshelfItem item) {
         this.mItem = item;
-        this.mType = item.mType;
         this.mId = item.mId;
-        this.mInProgress = item.mInProgress;
+        this.mDownloadComplete = item.mDownloadComplete;
         this.mProgress = item.mProgress;
         this.mData = item.mData;
+        this.mReadTime = item.mReadTime;
     }
     
     private void initView(Context context) {
@@ -97,10 +99,79 @@ public class BookshelfItemView{
 
         mFrame.setOnClickListener(new OnClickListener() {
             public void onClick(View arg0) {
-                Toast.makeText(mContext, "Click", Toast.LENGTH_LONG).show();
+                if (!mDownloadComplete) {
+                    showCancelDialog(mId);
+                } else {
+                    //TODO
+                    //Open magz
+                }
             }
             
         });
+        
+        mFrame.setOnLongClickListener(new OnLongClickListener() {
+
+            public boolean onLongClick(View arg0) {
+                if (!mDownloadComplete) {
+                    showCancelDialog(mId);
+                } else {
+                    showDeleteDialog(mId);
+                }
+                return true;
+            }
+            
+        });
+    }
+    
+    private void showDeleteDialog(long id) {
+        DeleteListener l = new DeleteListener(id);
+        Builder dialog =  new AlertDialog.Builder(mContext)
+//        .setTitle(R.string.no_sdcard_title)
+        .setIcon(android.R.drawable.ic_dialog_alert)
+        .setMessage(R.string.delete_magz)
+        .setPositiveButton(android.R.string.ok, l)
+        .setNegativeButton(android.R.string.cancel, null);
+        dialog.show();
+    }
+    
+    private void showCancelDialog(long id) {
+        CancelListener l = new CancelListener(id);
+        Builder dialog =  new AlertDialog.Builder(mContext)
+//        .setTitle(R.string.no_sdcard_title)
+        .setIcon(android.R.drawable.ic_dialog_alert)
+        .setMessage(R.string.cancel_download)
+        .setPositiveButton(android.R.string.ok, l)
+        .setNegativeButton(android.R.string.cancel, null);
+        dialog.show();
+    }
+    
+    private class DeleteListener implements android.content.DialogInterface.OnClickListener {
+        private long mId;
+
+        public DeleteListener(long id) {
+            mId = id;
+        }
+        
+        public void onClick(DialogInterface dialog, int which) {
+            DBHelper.deleteMyMagz(mId);
+            //TODO
+            //StoreManager.deleteMyMagz(mId);
+        }
+    }
+    
+    private class CancelListener implements android.content.DialogInterface.OnClickListener {
+        private long mId;
+        public CancelListener(long id) {
+            mId = id;
+        }
+
+        public void onClick(DialogInterface dialog, int which) {
+            DBHelper.deleteMyMagz(mId);
+            //TODO
+            //DownloadManager.cancelDownload(mId);
+            //StoreManager.deleteMyMagz(mId);
+        }
+        
     }
     
     public void setProgress(int progress) {
@@ -117,21 +188,15 @@ public class BookshelfItemView{
         return mView;
     }
     
-    public void setState(boolean inProgress) {
-        if (mType == TYPE_RECENTLY_READS) {
-            return;
-        }
-        if (inProgress != mInProgress) {
-            mInProgress = inProgress;
+    public void setState(boolean downloadComplete) {
+        if (downloadComplete != mDownloadComplete) {
+            mDownloadComplete = downloadComplete;
             checkState();
         }
     }
     
     private void checkState() {
-        if (mType == TYPE_RECENTLY_READS) {
-            mImage.setVisibility(View.VISIBLE);
-            mProgressView.setVisibility(View.GONE);
-        } else if (mInProgress) {
+        if (mDownloadComplete) {
             mImage.setVisibility(View.GONE);
             mProgressView.setVisibility(View.VISIBLE);
             setProgress(mProgress);

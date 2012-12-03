@@ -1,7 +1,6 @@
 package com.wl.magz.utils;
 
-import com.wl.magz.view.BookshelfItem.DownloadItem;
-import com.wl.magz.view.BookshelfItem.RecentItem;
+import com.wl.magz.view.BookshelfItem;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -17,8 +16,7 @@ public class DBHelper extends SQLiteOpenHelper{
    
     private static DBHelper mInstance;
     private static SQLiteDatabase mDb;
-    
-    private static final String TABLE_RECENT_READS = "rencent_reads";
+
     private static final String TABLE_MY_MAGS = "my_mags";
 
     public DBHelper(Context context, String name, CursorFactory factory,
@@ -55,38 +53,37 @@ public class DBHelper extends SQLiteOpenHelper{
     }
     
     private void createTable1() {
-        String CREATE_MY_MAGS = "CREATE TABLE"
+        String CREATE_MY_MAGS = "CREATE TABLE "
                 + TABLE_MY_MAGS + "(_id INTEGER PRIMARY KEY, private_key varchar(20) NOT NULL," +
-                		" name varchar(20) NOT NULL, download_complete INTEGER NOT NULL DEFAULT 1" +
-                		" progress INTEGER";
-        
-        String CREATE_RECENT_READS = "CREATE TABLE"
-                + TABLE_RECENT_READS + "(_id INTEGER PRIMARY KEY, private_key varchar(20) NOT NULL," +
-                        " name varchar(20) NOT NULL, read_time INTEGER NOT NULL";
+                		" name varchar(20) NOT NULL,  path varchar(30)," +
+                		" download_complete INTEGER NOT NULL DEFAULT 1," +
+                		" progress INTEGER, read_time INTEGER NOT NULL)";
         
         mDb.execSQL(CREATE_MY_MAGS);
-        mDb.execSQL(CREATE_RECENT_READS);
     }
     
-    public static Cursor getMyMags() {
-        String sql = "SELCET * FROM " + TABLE_MY_MAGS;
+    public static Cursor getMyMagzs() {
+        String sql = "SELECT * FROM " + TABLE_MY_MAGS;
         return mDb.rawQuery(sql, null);
     }
     
     public static Cursor getRecentReads() {
-        String sql = "SELECT * FROM " + TABLE_RECENT_READS + "ORDER BY read_time";
+        String sql = "SELECT * FROM " + TABLE_MY_MAGS + " ORDER BY read_time";
         return mDb.rawQuery(sql, null);
     }
     
-    public static long addNewMag(DownloadItem magz) {
+    public static long addNewMag(BookshelfItem magz) {
         ContentValues cv = magz.toValues();
         return mDb.insert(TABLE_MY_MAGS, null, cv);
-
     }
     
-    public static long addReadRead(RecentItem magz) {
+    public static int updateMyMagz(BookshelfItem magz) {
         ContentValues cv = magz.toValues();
-        return mDb.insert(TABLE_RECENT_READS, null, cv);
+        return mDb.update(TABLE_MY_MAGS, cv, "_id=?", new String[] {String.valueOf(magz.mId)});
+    }
+
+    public static int deleteMyMagz(long id) {
+        return mDb.delete(TABLE_MY_MAGS, "_id=?", new String[] {String.valueOf(id)});
     }
 
 }

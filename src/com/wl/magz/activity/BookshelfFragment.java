@@ -10,11 +10,8 @@ import com.wl.magz.utils.ImageResizer;
 import com.wl.magz.utils.ImageWorker;
 import com.wl.magz.utils.Utils;
 import com.wl.magz.view.BookshelfItem;
-import com.wl.magz.view.BookshelfItem.DownloadItem;
-import com.wl.magz.view.BookshelfItem.RecentItem;
 import com.wl.magz.view.BookshelfItemAdapter;
 
-import android.app.Activity;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -60,7 +57,7 @@ public class BookshelfFragment extends Fragment {
     }
     
     private void initData() {
-        Cursor allCursor = DBHelper.getMyMags();
+        Cursor allCursor = DBHelper.getMyMagzs();
         Cursor recentsCursor = DBHelper.getRecentReads();
 
         mMyItems = new ArrayList<BookshelfItem>();
@@ -68,7 +65,7 @@ public class BookshelfFragment extends Fragment {
         if (allCursor != null) {
             allCursor.moveToPosition(-1);
             while (allCursor.moveToNext()) {
-                DownloadItem magz = new DownloadItem();
+                BookshelfItem magz = new BookshelfItem();
                 magz.initFromCursor(allCursor);
                 mMyItems.add(magz);
             }
@@ -76,8 +73,8 @@ public class BookshelfFragment extends Fragment {
         
         if (recentsCursor != null) {
             recentsCursor.moveToPosition(-1);
-            while (recentsCursor.moveToNext()) {
-                RecentItem magz = new RecentItem();
+            while (recentsCursor.moveToNext() && mRecentItems.size() < 3) {
+                BookshelfItem magz = new BookshelfItem();
                 magz.initFromCursor(recentsCursor);
                 mRecentItems.add(magz);
             }

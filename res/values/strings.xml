@@ -7,5 +7,7 @@
     <string name="tab1">Tab1</string>
     <string name="tab2">Tab2</string>
     <string name="tab3">Tab3</string>
+    <string name="delete_magz">Delete this Magazine?</string>
+    <string name="cancel_download">Cancel this Download?</string>
 
 </resources>
