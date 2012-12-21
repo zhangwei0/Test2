@@ -4,7 +4,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import com.wl.magz.R;
-import com.wl.magz.service.DownloadService;
+import com.wl.magz.downloads.DownloadService;
 
 import android.os.Bundle;
 import android.content.Intent;
