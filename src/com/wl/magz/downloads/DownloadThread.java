@@ -73,6 +73,10 @@ public class DownloadThread extends Thread {
             super(message, throwable);
             mFinalStatus = finalStatus;
         }
+        public StopRequestException() {
+            super("Unknown Exception");
+            mFinalStatus = -1;
+        }
     }
     
     private static final String USER_AGENT = "";
@@ -87,22 +91,22 @@ public class DownloadThread extends Thread {
     public void run() {
         android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
         State state = new State(mInfo);
-        android.net.http.AndroidHttpClient client = null;
+        AndroidHttpClient client = null;
         PowerManager.WakeLock wakeLock = null;
-        final NetworkPolicyManager netPolicy = NetworkPolicyManager.getSystemService(mContext);
+//        final NetworkPolicyManager netPolicy = NetworkPolicyManager.getSystemService(mContext);
         final PowerManager pm = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
-        int finalStatus = DownloadStatus.STATUS_UNKNOWN_ERROR;
+        int finalStatus = Downloads.STATUS_UNKNOWN_ERROR;
         String errorMsg = null;
         try {
             wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
             wakeLock.acquire();
-            netPolicy.registerListener(mPolicyListener);
+//            netPolicy.registerListener(mPolicyListener);
             client = AndroidHttpClient.newInstance(userAgent(), mContext);
             
             boolean finished = false;
             while(!finished) {
-                ConnRouteParams.setDefaultProxy(client.getParams(),
-                        Proxy.getPreferredHttpHost(mContext, state.mRequestUri));
+                ConnRouteParams.setDefaultProxy(client.getParams(),null);
+//                        Proxy.getPreferredHttpHost(mContext, state.mRequestUri));
                 HttpGet request = new HttpGet(state.mRequestUri);
                 try {
                     executeDownload(state, client, request);
@@ -115,13 +119,13 @@ public class DownloadThread extends Thread {
                 }
             }
             finalizeDestinationFile(state);
-            finalStatus = DownloadStatus.STATUS_SUCCESS;
+            finalStatus = Downloads.STATUS_SUCCESS;
         } catch (StopRequestException error) {
             errorMsg = error.getMessage();
             finalStatus = error.mFinalStatus;
         } catch (Throwable ex) {
             errorMsg = ex.getMessage();
-            finalStatus = DownloadStatus.STATUS_UNKNOWN_ERROR;
+            finalStatus = Downloads.STATUS_UNKNOWN_ERROR;
         } finally {
             if (client != null) {
                 client.close();
@@ -131,7 +135,7 @@ public class DownloadThread extends Thread {
             notifyDownloadCompleted(finalStatus, state.mCountRetry, state.mRetryAfter,
                                     state.mGotData, state.mFilename, state.mNewUri, state.mMimeType, errorMsg);
             DownloadManager.getInstance().dequeueDownload(mInfo.mId);
-            netPolicy.unregisterListener(mPolicyListener);
+//            netPolicy.unregisterListener(mPolicyListener);
             if (wakeLock != null) {
                 wakeLock.release();
                 wakeLock = null;
@@ -139,7 +143,7 @@ public class DownloadThread extends Thread {
         }
     }
     
-    private static final int BUFFER_SIZE;
+    private static final int BUFFER_SIZE = 0;
     private void executeDownload(State state, AndroidHttpClient client, HttpGet request)
             throws StopRequestException, RetryDownload {
         InnerState innerState = new InnerState();
@@ -169,12 +173,12 @@ public class DownloadThread extends Thread {
                     state.mFilename = null;
                 } else if (mInfo.mETag == null && !mInfo.mNoIntegrity) {
                     f.delete();
-                    throw new StopRequestException(DownloadStatus.STATUS_CANNOT_RESUME, "");
+                    throw new StopRequestException(Downloads.STATUS_CANNOT_RESUME, "");
                 } else {
                     try {
                         state.mStream = new FileOutputStream(state.mFilename, true);
                     } catch (FileNotFoundException exc) {
-                        throw new StopRequestException(DownloadStatus.STATUS_FILE_ERROR, "");
+                        throw new StopRequestException(Downloads.STATUS_FILE_ERROR, "");
                     }
                     state.mCurrentBytes = (int) fileLength;
                     if (mInfo.mTotalBytes != -1) {
@@ -200,18 +204,18 @@ public class DownloadThread extends Thread {
     }
     
     private void checkConnectivity() throws StopRequestException {
-        mPolicyDirty = false;
+//        mPolicyDirty = false;
         int networkUsable = mInfo.checkCanUseNetwork();
         if (networkUsable != DownloadInfo.NETWORK_OK) {
-            int status = DownloadStatus.STATUS_WAITING_FOR_NETWORK;
+            int status = Downloads.STATUS_WAITING_FOR_NETWORK;
             if (networkUsable == DownloadInfo.NETWORK_UNUSABLE_DUE_TO_SIZE) {
-                status = DownloadStatus.STATUS_QUEUED_FOR_WIFI;
+                status = Downloads.STATUS_QUEUED_FOR_WIFI;
                 mInfo.notifyPauseDueToSize(true);
             } else if (networkUsable == DownloadInfo.NETWORK_RECOMMENDED_UNUSABLE) {
-                status = DownloadStatus.STATUS_QUEUED_FOR_WIFI;
+                status = Downloads.STATUS_QUEUED_FOR_WIFI;
                 mInfo.notifyPauseDueToSize(false);
             } else if (networkUsable == DownloadInfo.NETWORK_BLOCKED) {
-                status = DownloadStatus.STATUS_BLOCKED;
+                status = Downloads.STATUS_BLOCKED;
             }
             throw new StopRequestException(status,"");
         }
@@ -222,7 +226,7 @@ public class DownloadThread extends Thread {
         try {
             return client.execute(request);
         } catch (IllegalArgumentException ex) {
-            throw new StopRequestException(DownloadStatus.STATUS_HTTP_DATA_ERROR, "");
+            throw new StopRequestException(Downloads.STATUS_HTTP_DATA_ERROR, "");
         } catch (IOException ex) {
             throw new StopRequestException();
         }
@@ -234,7 +238,7 @@ public class DownloadThread extends Thread {
         if (statusCode == 503 && mInfo.mNumFailed < MAX_RETRIES) {
             handleServiceUnavailable(state, response);
         }
-        if (statusCode == 301 || statusCode == 302 || statusCode == 303 || status == 307) {
+        if (statusCode == 301 || statusCode == 302 || statusCode == 303 || statusCode == 307) {
             handleRedirect(state, response, statusCode);
         }
         int expectedStatus = state.mContinuingDownload ? 206 : STATUS_SUCCESS;
@@ -252,11 +256,11 @@ public class DownloadThread extends Thread {
         if (statusCode >= 400 && statusCode < 600) {
             finalStatus = statusCode;
         } else if (statusCode >= 300 && statusCode < 400) {
-            finalStatus = STATUS_UNHANDLED_REDIRECT;
-        } else if (state.mContinuingDownload && statusCode == STATUS_SUCCESS) {
-            finalStatus = STATUS_CANNOT_RESUME;
+            finalStatus = Downloads.STATUS_UNHANDLED_REDIRECT;
+        } else if (state.mContinuingDownload && statusCode == Downloads.STATUS_SUCCESS) {
+            finalStatus = Downloads.STATUS_CANNOT_RESUME;
         } else {
-            finalStatus = STATUS_UNHANDLED_HTTP_CODE;
+            finalStatus = Downloads.STATUS_UNHANDLED_HTTP_CODE;
         }
         throw new StopRequestException();
     }
@@ -272,7 +276,7 @@ public class DownloadThread extends Thread {
         try {
             state.mStream = new FileOutputStream(state.mFilename);
         } catch (FileNotFoundException exc) {
-            throw new StopRequestException(DownloadStatus.STATUS_FILE_ERROR, "");
+            throw new StopRequestException(Downloads.STATUS_FILE_ERROR, "");
         }
         
         updateDatabaseFromHeaders(state, innerState);
@@ -320,7 +324,7 @@ public class DownloadThread extends Thread {
                 && (headerTransferEncoding == null
                         || !headerTransferEncoding.equalsIgnoreCase("chunked"));
         if (!mInfo.mNoIntegrity && noSizeInfo) {
-            throw new StopRequestException(DownloadStatus.STATUS_HTTP_DATA_ERROR, "");
+            throw new StopRequestException(Downloads.STATUS_HTTP_DATA_ERROR, "");
         }
     }
     
@@ -409,7 +413,7 @@ public class DownloadThread extends Thread {
                 && (state.mCurrentBytes != Integer.parseInt(innerState.mHeaderContentLength));
         if (lengthMismatched) {
             if (cannotResume(state)) {
-                throw new StopRequestException(DownloadStatus.STATUS_CANNOT_RESUME, "");
+                throw new StopRequestException(Downloads.STATUS_CANNOT_RESUME, "");
             } else {
                 throw new StopRequestException();
             }
@@ -452,11 +456,11 @@ public class DownloadThread extends Thread {
     
     private void checkPausedOrCanceled(State state) throws StopRequestException {
         synchronized(mInfo) {
-            if (mInfo.mControl == DownloadStatus.CONTROL_PAUSED) {
-                throw new StopRequestException(DownloadStatus.STATUS_PAUSED_BY_APP, "");
+            if (mInfo.mControl == Downloads.CONTROL_PAUSED) {
+                throw new StopRequestException(Downloads.STATUS_PAUSED_BY_APP, "");
             }
             if (mInfo.mStatus == DonwloadStatus.STATUS_CANCELED) {
-                throw new StopRequestException(DownloadStatus.STATUS_CANCELED, "");
+                throw new StopRequestException(Downloads.STATUS_CANCELED, "");
             }
         }
     }
@@ -469,7 +473,7 @@ public class DownloadThread extends Thread {
             ContentValues values = new ContentValues();
             values.put(COLUMN_CURRENT_BYTES, state.mCurrentBytes);
             if (cannotResume(state)) {
-                throw new StopRequestException(DownloadStatus.STATUS_CANNOT_RESUME, "");
+                throw new StopRequestException(Downloads.STATUS_CANNOT_RESUME, "");
             } else {
                 throw new StopRequestException();
             }
@@ -512,6 +516,26 @@ public class DownloadThread extends Thread {
         }
         mContext.getContentResolver().update(mInfo.getAllDownloadsUri(), values, null, null);
     }
+    
+//    private INetworkPolicyListener mPolicyListener = new INetworkPolicyListener.Stub() {
+//        @Override
+//        public void onUidRulesChanged(int uid, int uidRules) {
+//            // only someone like NPMS should only be calling us
+//            mContext.enforceCallingOrSelfPermission(MANAGE_NETWORK_POLICY, Constants.TAG);
+//
+//            if (uid == mInfo.mUid) {
+//                mPolicyDirty = true;
+//            }
+//        }
+//
+//        @Override
+//        public void onMeteredIfacesChanged(String[] meteredIfaces) {
+//            // only someone like NPMS should only be calling us
+//            mContext.enforceCallingOrSelfPermission(MANAGE_NETWORK_POLICY, Constants.TAG);
+//
+//            mPolicyDirty = true;
+//        }
+//    };
 
 
 }

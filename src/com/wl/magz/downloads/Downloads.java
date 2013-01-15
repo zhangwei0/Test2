@@ -1,6 +1,6 @@
 package com.wl.magz.downloads;
 
-public class DownloadStatus {
+public class Downloads {
 
 //    public static final String STATUS_UNKNOWN_ERROR = "status_unknown_error";
 //    public static final String STATUS_WAITING_FOR_NETWORK = "status_waiting_for_network";
@@ -34,4 +34,14 @@ public class DownloadStatus {
     public static final int STATUS_UNHANDLED_HTTP_CODE = 12;
     public static final int STATUS_TOO_MANY_REDIRECTS = 13;
     public static final int STATUS_WAITING_TO_RETRY = 14;
+    
+    public static final int STATUS_RUNNING = 101;
+    public static final int STATUS_PENDING = 102;
+    public static final int STATUS_DEVICE_NOT_FOUND_ERROR = 103;
+    
+    
+    public static final int CONTROL_PAUSED = 201;
+    public static final int CONTROL_RUN = 202;
+    
+    
 }

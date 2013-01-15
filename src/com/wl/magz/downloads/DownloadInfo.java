@@ -8,13 +8,50 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.NetworkInfo.DetailedState;
 import android.os.Environment;
+import android.provider.Settings;
+import android.provider.Settings.SettingNotFoundException;
 import android.util.Pair;
 
 public class DownloadInfo {
     
+    public static final int NETWORK_OK = 1;
+
+    /**
+     * There is no network connectivity.
+     */
+    public static final int NETWORK_NO_CONNECTION = 2;
+
+    /**
+     * The download exceeds the maximum size for this network.
+     */
+    public static final int NETWORK_UNUSABLE_DUE_TO_SIZE = 3;
+
+    /**
+     * The download exceeds the recommended maximum size for this network, the user must confirm for
+     * this download to proceed without WiFi.
+     */
+    public static final int NETWORK_RECOMMENDED_UNUSABLE_DUE_TO_SIZE = 4;
+
+    /**
+     * The current connection is roaming, and the download can't proceed over a roaming connection.
+     */
+    public static final int NETWORK_CANNOT_USE_ROAMING = 5;
+
+    /**
+     * The app requesting the download specific that it can't use the current network connection.
+     */
+    public static final int NETWORK_TYPE_DISALLOWED_BY_REQUESTOR = 6;
+
+    /**
+     * Current network is blocked for requesting application.
+     */
+    public static final int NETWORK_BLOCKED = 7;
+    
     private Context mContext;
 
+    public int mUid;
     public long mId;
     public String mUri;
     public String mFileName;
@@ -49,7 +86,7 @@ public class DownloadInfo {
         if (DetailedState.BLOCKED.equals(info.getDeatiledState())) {
             return NETWORK_BLOCKED;
         }
-        return checkIsNetworkTypeAllowed(info.getType());
+        return checkSizeAllowedForNetwork(info.getType());
     }
     
     private int checkSizeAllowedForNetwork(int networkType) {
@@ -71,21 +108,21 @@ public class DownloadInfo {
         if (DownloadManager.getInstance().hasDownloadInQueue(mId)) {
             return false;
         }
-        if (mControl == DownloadStatus_CONTROL_PAUSED) {
+        if (mControl == Downloads.CONTROL_PAUSED) {
             return false;
         }
         
         switch (mStatus) {
         case 0:
-        case DownloadStatus.STATUS_PENDING;
-        case DownloadStatus.STATUS_RUNNING;
+        case Downloads.STATUS_PENDING:
+        case Downloads.STATUS_RUNNING:
             return true;
-        case DownloadStatus.STATUS_WAITING_FOR_NETWORK:
-        case DownloadStatus.STATUS_QUEUED_FOR_WIFI:
+        case Downloads.STATUS_WAITING_FOR_NETWORK:
+        case Downloads.STATUS_QUEUED_FOR_WIFI:
             return checkCanUseNetwork() == NETWORK_OK;
-        case DownloadStatus.STATUS_WAITING_TO_RETRY:
+        case Downloads.STATUS_WAITING_TO_RETRY:
             return restartTime(now) <= now;
-        case DownloadStatus.STATUS_DEVICE_NOT_FOUND_ERROR:
+        case Downloads.STATUS_DEVICE_NOT_FOUND_ERROR:
             return Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
         }
         return false;
@@ -95,13 +132,36 @@ public class DownloadInfo {
         if (!isReadyToStart(now)) {
             return;
         }
-        if (mStatus != DownloadStatus.STATUS_RUNNING) {
-            mStatus = DownloadStatus.STATUS_RUNNING;
+        if (mStatus != Downloads.STATUS_RUNNING) {
+            mStatus = Downloads.STATUS_RUNNING;
             ContentValues values = new ContentValues();
             values.put(COLUMN_STATUS, mStatus);
             mContext.getContentResolver().update(getAllDownloadUri(), values, null, null);
         }
         
         DownloadManager.getInstance().enqueueDownload(this);
+    }
+    
+    public NetworkInfo getActiveNetworkInfo(int uid) {
+        ConnectivityManager connectivity =
+                (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivity == null) {
+            return null;
+        }
+
+        final NetworkInfo activeInfo = connectivity.getActiveNetworkInfoForUid(uid);
+        if (activeInfo == null) {
+
+        }
+        return activeInfo;
+    }
+    
+    public static Long getMaxBytesOverMobile(Context context) {
+        try {
+            return Settings.Secure.getLong(context.getContentResolver(),
+                    Settings.Secure.DOWNLOAD_MAX_BYTES_OVER_MOBILE);
+        } catch (SettingNotFoundException exc) {
+            return null;
+        }
     }
 }
