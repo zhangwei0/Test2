@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 
-public class DownloadManager {
+public class DownloadHandler {
     
     private static final int MAX_DOWNLOADS_COUNT = 5;
 
@@ -15,9 +15,9 @@ public class DownloadManager {
     private final HashMap<Long, DownloadInfo> mDownloadsInProgress =
             new HashMap<Long, DownloadInfo>();
     
-    private static final DownloadManager mInstance = new DownloadManager();
+    private static final DownloadHandler mInstance = new DownloadHandler();
     
-    static DownloadManager getInstance() {
+    static DownloadHandler getInstance() {
         return mInstance;
     }
     
@@ -50,7 +50,8 @@ public class DownloadManager {
         
     }
     
-    synchronized boolean hasDownloadInProgress(long id) {
+    synchronized boolean hasDownloadInQueue(long id) {
         return mDownloadsQueue.containsKey(id) || mDownloadsInProgress.containsKey(id);
     }
+
 }

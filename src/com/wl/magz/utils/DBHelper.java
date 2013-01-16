@@ -18,6 +18,7 @@ public class DBHelper extends SQLiteOpenHelper{
     private static SQLiteDatabase mDb;
 
     private static final String TABLE_MY_MAGS = "my_mags";
+    private static final String TABLE_DOWNLOADS = "downloads";
 
     public DBHelper(Context context, String name, CursorFactory factory,
             int version) {
@@ -59,7 +60,12 @@ public class DBHelper extends SQLiteOpenHelper{
                 		" download_complete INTEGER NOT NULL DEFAULT 1," +
                 		" progress INTEGER, read_time INTEGER NOT NULL)";
         
+        String CREATE_DOWNLOADS = "CREATE TABLE "
+                + TABLE_DOWNLOADS + "(_id INTEGER PRIMARY KEY, current_bytes INTEGER, total_bytes INTEGER, "
+                + "uri varchar(30), file_name varchar(30), status INTEGER, num_failed INTEGER, "
+                + "uid INTEGER, etag varchar(30), user_agent varchar(30)";
         mDb.execSQL(CREATE_MY_MAGS);
+        mDb.execSQL(CREATE_DOWNLOADS);
     }
     
     public static Cursor getMyMagzs() {

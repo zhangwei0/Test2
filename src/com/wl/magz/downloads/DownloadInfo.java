@@ -4,11 +4,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.wl.magz.utils.Constant.Downloads;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.NetworkInfo.DetailedState;
+import android.net.Uri;
 import android.os.Environment;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
@@ -63,9 +66,12 @@ public class DownloadInfo {
     public String mETag;
     public boolean mDeleted;
     public int mAllowedNetworkTypes;
+    public String mUserAgent;
     
     public long mTotalBytes;
     public long mCurrentBytes;
+    
+    public boolean mNoIntegrity;
     
     private List<Pair<String, String>> mRequestHeaders = new ArrayList<Pair<String, String>>();
     
@@ -105,7 +111,7 @@ public class DownloadInfo {
     }
     
     private boolean isReadyToStart(long now) {
-        if (DownloadManager.getInstance().hasDownloadInQueue(mId)) {
+        if (DownloadHandler.getInstance().hasDownloadInQueue(mId)) {
             return false;
         }
         if (mControl == Downloads.CONTROL_PAUSED) {
@@ -128,18 +134,18 @@ public class DownloadInfo {
         return false;
     }
     
-    void startIfReady(long now, StorageManager storageManager {
+    void startIfReady(long now) {
         if (!isReadyToStart(now)) {
             return;
         }
         if (mStatus != Downloads.STATUS_RUNNING) {
             mStatus = Downloads.STATUS_RUNNING;
             ContentValues values = new ContentValues();
-            values.put(COLUMN_STATUS, mStatus);
-            mContext.getContentResolver().update(getAllDownloadUri(), values, null, null);
+            values.put(Downloads.COLUMN_STATUS, mStatus);
+            mContext.getContentResolver().update(getAllDownloadsUri(), values, null, null);
         }
         
-        DownloadManager.getInstance().enqueueDownload(this);
+        DownloadHandler.getInstance().enqueueDownload(this);
     }
     
     public NetworkInfo getActiveNetworkInfo(int uid) {
@@ -154,6 +160,10 @@ public class DownloadInfo {
 
         }
         return activeInfo;
+    }
+    
+    public Uri getAllDownloadsUri() {
+        return null;
     }
     
     public static Long getMaxBytesOverMobile(Context context) {

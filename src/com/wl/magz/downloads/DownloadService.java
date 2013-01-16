@@ -9,7 +9,7 @@ import android.os.IBinder;
 
 public class DownloadService extends Service {
 
-    private DownloadManager mDownloadManager;
+    private DownloadHandler mDownloadManager;
     private HashMap<Long, DownloadInfo> mDownloads = new HashMap<Long, DownloadInfo>();
 
     private UpdateThread mUpdateThread;
@@ -22,7 +22,7 @@ public class DownloadService extends Service {
     
     public void onCreate() {
         super.onCreate();
-        mDownloadManager = DownloadManager.getInstance();
+        mDownloadManager = DownloadHandler.getInstance();
     }
     
     private void addNewDownload(DownloadInfo info) {
