@@ -13,6 +13,7 @@ import org.apache.http.conn.params.ConnRouteParams;
 
 import com.wl.magz.utils.Constant;
 import com.wl.magz.utils.Constant.Downloads;
+import com.wl.magz.utils.DBHelper;
 
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
@@ -23,6 +24,7 @@ import android.text.TextUtils;
 import android.util.Pair;
 
 public class DownloadThread extends Thread {
+    private static final String DESTINATION = "/mnt/sdcard/.mgz";
     private static final String TAG = "DownloadThread";
     private Context mContext;
     private DownloadInfo mInfo;
@@ -213,16 +215,16 @@ public class DownloadThread extends Thread {
         int networkUsable = mInfo.checkCanUseNetwork();
         if (networkUsable != DownloadInfo.NETWORK_OK) {
             int status = Downloads.STATUS_WAITING_FOR_NETWORK;
-            if (networkUsable == DownloadInfo.NETWORK_UNUSABLE_DUE_TO_SIZE) {
-                status = Downloads.STATUS_QUEUED_FOR_WIFI;
-                mInfo.notifyPauseDueToSize(true);
-            } else if (networkUsable == DownloadInfo.NETWORK_RECOMMENDED_UNUSABLE) {
-                status = Downloads.STATUS_QUEUED_FOR_WIFI;
-                mInfo.notifyPauseDueToSize(false);
-            } else if (networkUsable == DownloadInfo.NETWORK_BLOCKED) {
-                status = Downloads.STATUS_BLOCKED;
-            }
-            throw new StopRequestException(status,"");
+//            if (networkUsable == DownloadInfo.NETWORK_UNUSABLE_DUE_TO_SIZE) {
+//                status = Downloads.STATUS_QUEUED_FOR_WIFI;
+//                mInfo.notifyPauseDueToSize(true);
+//            } else if (networkUsable == DownloadInfo.NETWORK_RECOMMENDED_UNUSABLE) {
+//                status = Downloads.STATUS_QUEUED_FOR_WIFI;
+//                mInfo.notifyPauseDueToSize(false);
+//            } else if (networkUsable == DownloadInfo.NETWORK_BLOCKED) {
+//                status = Downloads.STATUS_BLOCKED;
+//            }
+            throw new StopRequestException(status,"No Connetction");
         }
     }
     
@@ -253,6 +255,16 @@ public class DownloadThread extends Thread {
         }
     }
     
+    private void handleServiceUnavailable(State state, HttpResponse response)
+            throws StopRequestException {
+        throw new StopRequestException(0, "Service Unavailable");
+    }
+    
+    private void handleRedirect(State state, HttpResponse response, int statusCode)
+            throws StopRequestException {
+        throw new StopRequestException(0, "Redirect");
+    }
+    
     private void handleOtherStatus(State state, InnerState innerState, int statusCode)
             throws StopRequestException {
         if (statusCode == 416) {
@@ -278,7 +290,7 @@ public class DownloadThread extends Thread {
         }
         readResponseHeaders(state, innerState, response);
         
-        state.mFileName =; //TODO
+        state.mFilename = DESTINATION + state.mRequestUri; //TODO
         try {
             state.mStream = new FileOutputStream(state.mFilename);
         } catch (FileNotFoundException exc) {
@@ -296,7 +308,7 @@ public class DownloadThread extends Thread {
             values.put(Downloads.COLUMN_ETAG, state.mHeaderETag);
         }
         values.put(Downloads.COLUMN_TOTAL_BYTES, mInfo.mTotalBytes);
-        mContext.getContentResolver().update(mInfo.getAllDownloadsUri(), values, null, null);
+        DBHelper.updateDownloadWithId(mInfo.mId, values);
     }
     
     private void readResponseHeaders(State state, InnerState innerState, HttpResponse response)
@@ -414,7 +426,7 @@ public class DownloadThread extends Thread {
         if (innerState.mHeaderContentLength == null) {
             values.put(Downloads.COLUMN_TOTAL_BYTES, state.mCurrentBytes);
         }
-        mContext.getContentResolver().update(mInfo.getAllDownloadsUri(), values, null, null);
+        DBHelper.updateDownloadWithId(mInfo.mId, values);
         boolean lengthMismatched = (innerState.mHeaderContentLength != null)
                 && (state.mCurrentBytes != Integer.parseInt(innerState.mHeaderContentLength));
         if (lengthMismatched) {
@@ -454,7 +466,7 @@ public class DownloadThread extends Thread {
                 && now - state.mTimeLastNotification > Downloads.MIN_PROGRESS_TIME) {
             ContentValues values = new ContentValues();
             values.put(Downloads.COLUMN_CURRENT_BYTES, state.mCurrentBytes);
-            mContext.getContentResolver().update(mInfo.getAllDownloadsUri(), values, null, null);
+            DBHelper.updateDownloadWithId(mInfo.mId, values);
             state.mBytesNotified = state.mCurrentBytes;
             state.mTimeLastNotification = now;
         }
@@ -492,9 +504,14 @@ public class DownloadThread extends Thread {
         notifyThroughDatabase(
                 status, countRetry, retryAfter, gotData, filename, uri, mimeType,
                 errorMsg);
-        if (Downloads.isStatusCompleted(status)) {
-            mInfo.sendIntentIfRequested();
+        if (isStatusCompleted(status)) {
+            //TODO
+//            mInfo.sendIntentIfRequested();
         }
+    }
+    
+    private boolean isStatusCompleted(int status) {
+        return status == Downloads.STATUS_SUCCESS;
     }
 
     private void notifyThroughDatabase(
@@ -520,7 +537,7 @@ public class DownloadThread extends Thread {
         if (!TextUtils.isEmpty(errorMsg)) {
             values.put(Downloads.COLUMN_ERROR_MSG, errorMsg);
         }
-        mContext.getContentResolver().update(mInfo.getAllDownloadsUri(), values, null, null);
+        DBHelper.updateDownloadWithId(mInfo.mId, values);
     }
     
 //    private INetworkPolicyListener mPolicyListener = new INetworkPolicyListener.Stub() {

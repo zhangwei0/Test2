@@ -43,7 +43,8 @@ public class Constant {
         public static final int CONTROL_PAUSED = 201;
         public static final int CONTROL_RUN = 202;
         
-        //DB
+        //DB Download
+        public static final String COLUMN_ID = "_id";
         public static final String COLUMN_CURRENT_BYTES = "current_bytes";
         public static final String COLUMN_TOTAL_BYTES = "total_bytes";
         public static final String COLUMN_URI= "uri";
@@ -56,6 +57,10 @@ public class Constant {
         public static final String COLUMN_FAILED_CONNECTIONS = "failed_connections";
         public static final String COLUMN_RETRY_AFTER_X_REDIRECT_COUNT = "retry_after";
         public static final String COLUMN_ERROR_MSG = "error_msg";
+        public static final String COLUMN_CONTROL = "control";
+        
+        public static final String COLUMN_HEADER = "header";
+        public static final String COLUMN_VALUE = "value";
         
         
         public static final int MIN_PROGRESS_STEP = 4096;

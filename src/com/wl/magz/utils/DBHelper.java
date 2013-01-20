@@ -19,6 +19,7 @@ public class DBHelper extends SQLiteOpenHelper{
 
     private static final String TABLE_MY_MAGS = "my_mags";
     private static final String TABLE_DOWNLOADS = "downloads";
+    private static final String TABLE_DOWNLOAD_HEADERS = "download_headers";
 
     public DBHelper(Context context, String name, CursorFactory factory,
             int version) {
@@ -64,6 +65,10 @@ public class DBHelper extends SQLiteOpenHelper{
                 + TABLE_DOWNLOADS + "(_id INTEGER PRIMARY KEY, current_bytes INTEGER, total_bytes INTEGER, "
                 + "uri varchar(30), file_name varchar(30), status INTEGER, num_failed INTEGER, "
                 + "uid INTEGER, etag varchar(30), user_agent varchar(30)";
+        
+        String CREATE_DOWNLOAD_HEADERS = "CREATE TABLE "
+                + TABLE_DOWNLOAD_HEADERS + "_id INTEGER PRIMARY KEY, uri varchar(50), header varchar(20), "
+                + "value varchar(20)";
         mDb.execSQL(CREATE_MY_MAGS);
         mDb.execSQL(CREATE_DOWNLOADS);
     }
@@ -90,6 +95,26 @@ public class DBHelper extends SQLiteOpenHelper{
 
     public static int deleteMyMagz(long id) {
         return mDb.delete(TABLE_MY_MAGS, "_id=?", new String[] {String.valueOf(id)});
+    }
+    
+    public static Cursor getAllDownloads() {
+        String sql = "SELECT * FROM " + TABLE_DOWNLOADS;
+        return mDb.rawQuery(sql, null);
+    }
+    
+    public static Cursor getDownloadHeaders(String uri) {
+        String sql = "SELECT * FROM " + TABLE_DOWNLOAD_HEADERS;
+        return mDb.rawQuery(sql, null);
+    }
+    
+    public static int updateDownloadWithId(long id, ContentValues values) {
+        return mDb.update(TABLE_DOWNLOADS, values, "_id=?", new String[] {String.valueOf(id)});
+    }
+    
+    public static long insertDownload(String uri) {
+        ContentValues values = new ContentValues();
+        values.put("uri", uri);
+        return mDb.insert(TABLE_DOWNLOADS, "_id", values);
     }
 
 }
