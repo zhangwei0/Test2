@@ -9,18 +9,24 @@ import java.util.Set;
 import com.wl.magz.utils.DBHelper;
 import com.wl.magz.utils.Constant.Downloads;
 
+import android.annotation.SuppressLint;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.IBinder;
 
 public class DownloadService extends Service {
 
-    private DownloadHandler mDownloadManager;
     private HashMap<Long, DownloadInfo> mDownloads = new HashMap<Long, DownloadInfo>();
 
     private UpdateThread mUpdateThread;
     private boolean mPendingUpdate;
+    
+    public static void start(Context context) {
+        Intent i = new Intent(context, DownloadService.class);
+        context.bindService(i);
+    }
     @Override
     public IBinder onBind(Intent arg0) {
         // TODO Auto-generated method stub
@@ -29,9 +35,15 @@ public class DownloadService extends Service {
     
     public void onCreate() {
         super.onCreate();
-        mDownloadManager = DownloadHandler.getInstance();
     }
-    
+    @SuppressLint("NewApi")
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        // TODO Auto-generated method stub
+        int returnValue = super.onStartCommand(intent, flags, startId);
+        updateFromProvider();
+        return returnValue;
+    }
     /*
      * Public Api
      */
@@ -39,7 +51,7 @@ public class DownloadService extends Service {
         DBHelper.insertDownload(uri);
         updateFromProvider();
     }
-    
+
     private void updateFromProvider() {
         synchronized(this) {
             mPendingUpdate = true;
@@ -54,7 +66,22 @@ public class DownloadService extends Service {
         
         public void run() {
             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
-            synchronized(DownloadService.this) {
+            boolean keepService = true;
+            for (;;) {
+                synchronized (DownloadService.this) {
+                    if (mUpdateThread != this) {
+                        throw new IllegalStateException(
+                                "multiple UpdateThreads in DownloadService");
+                    }
+                    if (!mPendingUpdate) {
+                        mUpdateThread = null;
+                        if (!keepService) {
+                            stopSelf();
+                        }
+                        return;
+                    }
+                    mPendingUpdate = false;
+                }
                 long now = System.currentTimeMillis();
                 Set<Long> idsNoLongerInDatabase = new HashSet<Long>(mDownloads.keySet());
                 Cursor cursor = DBHelper.getAllDownloads();
