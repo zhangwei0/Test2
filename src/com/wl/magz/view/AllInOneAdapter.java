@@ -15,11 +15,10 @@ public class AllInOneAdapter extends PagerAdapter{
     private ArrayList<Fragment> mFragments;
     private FragmentActivity mActivity;
     private FragmentManager mFm;
-    private FragmentTransaction mFt;
+    private FragmentTransaction mCurTransaction;
     public AllInOneAdapter(FragmentActivity activity) {
         mActivity = activity;
         mFm = mActivity.getSupportFragmentManager();
-        mFt = mFm.beginTransaction();
     }
     
     public void setFragments(ArrayList<Fragment> fragments) {
@@ -28,33 +27,51 @@ public class AllInOneAdapter extends PagerAdapter{
 
     @Override
     public void destroyItem(View arg0, int arg1, Object arg2) {
-        Object v = mFragments.get(arg1);
-        FragmentTransaction ft = mFm.beginTransaction();
-        ft.hide((Fragment) v);
+        if (mCurTransaction == null) {
+            mCurTransaction = mFm.beginTransaction();
+        }
+        mCurTransaction.detach((Fragment)arg2);
     }
 
     @Override
     public void finishUpdate(View arg0) {
-        if (mFt != null) {
-            mFt.commitAllowingStateLoss();
-            mFt = null;
+        if (mCurTransaction != null) {
+            mCurTransaction.commitAllowingStateLoss();
+            mCurTransaction = null;
             mFm.executePendingTransactions();
         }
     }
 
     @Override
-    public int getCount() {
-        return 3;
+    public Object instantiateItem(View arg0, int arg1) {
+        if (mCurTransaction == null) {
+            mCurTransaction = mFm.beginTransaction();
+        }
+        long id = getItemId(arg1);
+        String tag = makeFragmentName(arg0.getId(), id);
+        Fragment f = mFm.findFragmentByTag(tag);
+        if (f != null) {
+            mCurTransaction.attach(f);
+        } else {
+            f = getItem(arg1);
+            mCurTransaction.add(arg0.getId(), f, makeFragmentName(arg0.getId(), id));
+        }
+        return f;
     }
 
     @Override
-    public Object instantiateItem(View arg0, int arg1) {
-        Object v = mFragments.get(arg1);
-        FragmentTransaction ft = mFm.beginTransaction();
-        ft.show((Fragment) v);
-        return v;
+    public int getCount() {
+        return mFragments.size();
     }
-
+    private Fragment getItem(int position) {
+        return mFragments.get(position);
+    }
+    private long getItemId(int position) {
+        return position;
+    }
+    private String makeFragmentName(long viewId, long id) {
+        return "Fragment-viewId:" + viewId + " Fragment id:" + id;
+    }
     @Override
     public boolean isViewFromObject(View arg0, Object arg1) {
         return ((Fragment) arg1).getView() == arg0;

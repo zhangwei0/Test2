@@ -70,14 +70,6 @@ public class AllInOneFragment extends Fragment {
         mTab2.setOnClickListener(selector);
         mTab3.setOnClickListener(selector);
 
-        FragmentTransaction ft = mFm.beginTransaction();
-        ft.add(R.id.view_pager, mBookshelfFragment, BookshelfFragment.TAG);
-        ft.add(R.id.view_pager, mMagzFragment, MagzFragment.TAG);
-        ft.add(R.id.view_pager, mMagzFragment2, MagzFragment2.TAG);
-//        ft.hide(mBookshelfFragment);
-//        ft.hide(mMagzFragment);
-//        ft.hide(mMagzFragment2);
-        ft.commit();
         mViewPager.setAdapter(mPagerAdapter);
         mViewPager.setCurrentItem(0);
         mViewPager.setOnPageChangeListener(new PageChangeListener());
