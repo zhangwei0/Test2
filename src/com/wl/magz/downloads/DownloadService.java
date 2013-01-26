@@ -11,26 +11,40 @@ import com.wl.magz.utils.Constant.Downloads;
 
 import android.annotation.SuppressLint;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.database.Cursor;
+import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 
 public class DownloadService extends Service {
+    private static final String TAG = "DownloadService";
 
     private HashMap<Long, DownloadInfo> mDownloads = new HashMap<Long, DownloadInfo>();
 
     private UpdateThread mUpdateThread;
     private boolean mPendingUpdate;
     
-    public static void start(Context context) {
+    private IBinder mBinder = new SBinder();
+    
+    public static void start(Context context, ServiceConnection connection) {
         Intent i = new Intent(context, DownloadService.class);
-        context.bindService(i);
+        context.bindService(i, connection, Context.BIND_AUTO_CREATE);
     }
     @Override
     public IBinder onBind(Intent arg0) {
-        // TODO Auto-generated method stub
-        return null;
+        Log.e(TAG, "onBind");
+        return mBinder;
+    }
+    
+    public class SBinder extends Binder {
+        public DownloadService getService() {
+            Log.e(TAG, "getService:" + (DownloadService.this != null));
+            return DownloadService.this;
+        }
     }
     
     public void onCreate() {
@@ -57,7 +71,7 @@ public class DownloadService extends Service {
             mPendingUpdate = true;
             if (mUpdateThread == null) {
                 mUpdateThread = new UpdateThread();
-                mUpdateThread.run();
+                mUpdateThread.start();
             }
         }
     }
@@ -66,7 +80,7 @@ public class DownloadService extends Service {
         
         public void run() {
             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
-            boolean keepService = true;
+            boolean keepService = false;
             for (;;) {
                 synchronized (DownloadService.this) {
                     if (mUpdateThread != this) {

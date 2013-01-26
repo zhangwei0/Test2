@@ -12,7 +12,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DBHelper extends SQLiteOpenHelper{
     
     public static final String DATABASE_NAME = "Mags";
-    private static final int VERSION = 1;
+    private static final int VERSION = 3;
    
     private static DBHelper mInstance;
     private static SQLiteDatabase mDb;
@@ -49,7 +49,7 @@ public class DBHelper extends SQLiteOpenHelper{
     }
     
     private void createTables() {
-        if (VERSION == 1) {
+        if (VERSION == 3) {
             createTable1();
         }
     }
@@ -64,13 +64,14 @@ public class DBHelper extends SQLiteOpenHelper{
         String CREATE_DOWNLOADS = "CREATE TABLE "
                 + TABLE_DOWNLOADS + "(_id INTEGER PRIMARY KEY, current_bytes INTEGER, total_bytes INTEGER, "
                 + "uri varchar(30), file_name varchar(30), status INTEGER, num_failed INTEGER, "
-                + "uid INTEGER, etag varchar(30), user_agent varchar(30)";
+                + "uid INTEGER, etag varchar(30), user_agent varchar(30), control INTEGER, error_msg varchar(30))";
         
         String CREATE_DOWNLOAD_HEADERS = "CREATE TABLE "
-                + TABLE_DOWNLOAD_HEADERS + "_id INTEGER PRIMARY KEY, uri varchar(50), header varchar(20), "
-                + "value varchar(20)";
+                + TABLE_DOWNLOAD_HEADERS + "( _id INTEGER PRIMARY KEY, uri varchar(50), header varchar(20), "
+                + "value varchar(20))";
         mDb.execSQL(CREATE_MY_MAGS);
         mDb.execSQL(CREATE_DOWNLOADS);
+        mDb.execSQL(CREATE_DOWNLOAD_HEADERS);
     }
     
     public static Cursor getMyMagzs() {

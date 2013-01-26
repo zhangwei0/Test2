@@ -5,9 +5,13 @@ import java.util.TimerTask;
 
 import com.wl.magz.R;
 import com.wl.magz.downloads.DownloadService;
+import com.wl.magz.utils.MagzApplication;
 
 import android.os.Bundle;
+import android.os.IBinder;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -15,6 +19,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.view.Menu;
 
 public class MainActivity extends FragmentActivity {
+    DownloadService mDownloadService;
 
     private static final int SLEEP_SECONDS = 2000;
     FragmentManager mFm;
@@ -40,6 +45,21 @@ public class MainActivity extends FragmentActivity {
 
         startDownloadService();
         toAllInOneFragment();
+//        ServiceConnection connection = new ServiceConnection() {
+//
+//            public void onServiceConnected(ComponentName arg0, IBinder binder) {
+//                mDownloadService = ((DownloadService.SBinder)binder).getService();
+//                
+//            }
+//
+//            public void onServiceDisconnected(ComponentName name) {
+//                mDownloadService = null;
+//                
+//            }
+//            
+//        };
+//        DownloadService.start(this, connection);
+  //      mDownloadService.addNewDownload("http://music.baidu.com/data/music/file?link=http://zhangmenshiting.baidu.com/data2/music/33971202/23473715212400128.mp3?xcode=32454b7bbbfbd01d553396c56deab3f1");
     }
 
     @Override
